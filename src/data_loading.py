@@ -5,13 +5,13 @@ import seaborn as sns
 
 def load_data(filepath):
     """
-    Загружает данные из CSV файла.
-    
+    Loads data from a CSV file.
+
     Parameters:
-    filepath (str): Путь к файлу.
-    
+    filepath (str): Path to the file.
+
     Returns:
-    DataFrame: Загруженные данные.
+    DataFrame: Loaded data.
     """
     data = pd.read_csv(filepath)
     return data
@@ -19,10 +19,10 @@ def load_data(filepath):
 
 def initial_analysis(data):
     """
-    Проводит начальный анализ данных: просмотр информации и описательной статистики.
-    
+    Performs initial data analysis: displays basic information and descriptive statistics.
+
     Parameters:
-    data (DataFrame): Исходные данные.
+    data (DataFrame): The input data.
     """
     print(data.info())
     print(data.describe())
@@ -31,4 +31,3 @@ def initial_analysis(data):
     plt.xlabel('Demand')
     plt.ylabel('Frequency')
     plt.show()
-    

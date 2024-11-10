@@ -1,5 +1,18 @@
-# Импорт всех необходимых модулей
-from src.data_loading import load_data, initial_analysis
+"""
+Demand Forecasting Pipeline
+
+This module processes data, performs feature engineering, splits data, trains a machine learning model, 
+evaluates it, and visualizes predictions for demand forecasting.
+
+Dependencies:
+    - load_data (from src.data_loading)
+    - add_date_features (from src.preprocessing)
+    - plot_time_series (from src.eda)
+    - split_data, train_model, evaluate_model, save_model (from src.train_model)
+    - plot_predictions (from src.evaluate)
+"""
+
+from src.data_loading import load_data
 from src.preprocessing import add_date_features
 from src.eda import plot_time_series
 from src.train_model import split_data, train_model, evaluate_model, save_model
@@ -7,39 +20,52 @@ from src.evaluate import plot_predictions
 
 
 def data_processing(data_path='data/Store Demand Forecasting Train Data.csv'):
-    
-    # 1. Загрузка данных и начальный анализ
+    """
+    Main function to execute the demand forecasting data processing pipeline.
+
+    Steps:
+        1. Load the data from a specified path.
+        2. Add date-related features to the data.
+        3. Perform exploratory data analysis with a time series plot.
+        4. Split data into training and testing sets.
+        5. Train a machine learning model using the training data.
+        6. Save the trained model.
+        7. Evaluate the model using testing data.
+        8. Visualize model predictions.
+
+    Args:
+        data_path (str): The file path to the input data. Default is 'data/Store Demand Forecasting Train Data.csv'.
+    """
+    # Load data
     data = load_data(data_path)
-    # initial_analysis(data)
-    
-    # 2. Предобработка данных
+
+    # Add date-related features
     data = add_date_features(data, date_column='date')
-    
-    # 3. Визуализация данных
-    # plot_time_series(data, date_column='date', value_column='sales')
-    
-    # 4. Определение признаков и целевой переменной
-    features = ['item', 'store', 'month', 'day_of_week', 'year']  # Добавь нужные признаки на основе своих данных
+
+    # Plot time series data for exploratory analysis
+    plot_time_series(data, date_column='date', value_column='sales')
+
+    # Define features and target variable
+    features = ['item', 'store', 'month', 'day_of_week', 'year', 'day', 'week_of_year']
     target = 'sales'
-    
-    # 5. Разделение данных на тренировочную и тестовую выборки
+
+    # Split the data into training and testing sets
     X_train, X_test, y_train, y_test, train_data, test_data = split_data(data, features, target)
 
-    # 6. Обучение модели
+    # Train the model using the training data
     model = train_model(X_train, y_train)
 
-    # 7. Сохранение модели
+    # Save the trained model to a file
     save_model(model, '../model.pkl')
 
-    # 8. Оценка модели
-    # metrics = evaluate_model(model, X_test, y_test)
-    # print(f'Model Evaluation Metrics: {metrics}')
+    # Evaluate the model using the testing data and print the metrics
+    metrics = evaluate_model(model, X_test, y_test)
+    print(f'Model Evaluation Metrics: {metrics}')
 
-    # 9. Визуализация прогнозов
-    # predictions = model.predict(X_test)
-    # plot_predictions(test_data, y_test, predictions)
+    # Predict on the test set and visualize the predictions
+    predictions = model.predict(X_test)
+    plot_predictions(test_data, y_test, predictions)
 
 
 if __name__ == '__main__':
     data_processing()
-

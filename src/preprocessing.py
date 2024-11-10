@@ -1,24 +1,32 @@
 import pandas as pd
-import numpy as np
 
 
 def add_date_features(data, date_column='date'):
     """
-    Добавляет признаки из даты, такие как месяц, день недели и год.
-    
-    Parameters:
-    data (DataFrame): Данные.
-    date_column (str): Название колонки с датой.
-    
-    Returns:
-    DataFrame: Данные с добавленными признаками.
-    """
-    data[date_column] = pd.to_datetime(data[date_column])
-    data['month'] = data[date_column].dt.month
-    data['day_of_week'] = data[date_column].dt.dayofweek
-    data['year'] = data[date_column].dt.year
+    Adds date-related features such as month, day of the week, year, day,
+    and week of the year from a specified date column.
 
-    data.fillna(data.mean(), inplace=True)
-    data.dropna()
+    Parameters:
+    data (DataFrame): The input DataFrame containing data.
+    date_column (str): The name of the column containing date values.
+
+    Returns:
+    DataFrame: The DataFrame with added date-related features.
+    """
+    # Convert the specified date column to datetime format
+    data[date_column] = pd.to_datetime(data[date_column], errors='coerce')
+
+    # Extract date-related features
+    data['month'] = data[date_column].dt.month
+    data['day_of_week'] = data[date_column].dt.dayofweek  # 0=Monday, 6=Sunday
+    data['year'] = data[date_column].dt.year
+    data['day'] = data[date_column].dt.day
+    data['week_of_year'] = data[date_column].dt.isocalendar().week
+
+    # Handle missing values by filling them with the mean for numerical columns
+    data.fillna(data.mean(numeric_only=True), inplace=True)
+
+    # Optional: drop remaining rows with missing values if any
+    data.dropna(inplace=True)
 
     return data

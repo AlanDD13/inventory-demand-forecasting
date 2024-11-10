@@ -1,120 +1,223 @@
+"""
+Inventory Demand Forecasting Application
+
+This module is used for visualizing and predicting demand using machine learning models. 
+It leverages data preprocessing, EDA (Exploratory Data Analysis), and prediction visualization features.
+
+Dependencies:
+    - pandas
+    - streamlit
+    - matplotlib
+    - seaborn
+    - pickle
+"""
+
+import datetime
+import pickle
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pickle
+from src.preprocessing import add_date_features
+
+# Constants for mapping days of the week to integers
+DAY_OF_WEEK = {
+    'Monday': 0,
+    'Tuesday': 1,
+    'Wednesday': 2,
+    'Thursday': 3,
+    'Friday': 4,
+    'Saturday': 5,
+    'Sunday': 6
+}
 
 
-# Функция для загрузки модели
 def load_model():
+    """
+    Loads the pre-trained model from the specified pickle file.
+
+    Returns:
+        model: The loaded model object or None if the model file is not found.
+    """
     try:
-        with open('model.pkl', 'rb') as file:
+        with open('src/model.pkl', 'rb') as file:
             model = pickle.load(file)
         return model
     except FileNotFoundError:
-        st.error("Файл с моделью не найден. Убедитесь, что 'model.pkl' доступен.")
+        st.error("Model not found. Retry or create the model again.")
         return None
 
 
-# Основное приложение Streamlit
 def main():
-    st.set_page_config(page_title="Inventory Demand Forecasting Presentation", layout="wide")
+    """
+    Main function to render the Streamlit web app for inventory demand forecasting.
+    It displays an introduction, EDA, feature engineering steps, model prediction, 
+    and visualization of the forecast results.
+    """
+    st.set_page_config(page_title="Inventory Demand Forecasting Presentation")
 
-    # Презентация в виде слайдов
-    st.sidebar.title("Навигация по слайдам")
-    slide = st.sidebar.radio("Выберите слайд:",
-                             ["Введение", "Исследование данных", "Обработка признаков", "Модель и результаты",
-                              "Визуализация прогнозов", "Заключение"])
+    st.title("Введение в проект")
+    st.write("""
+        ### Цель:
 
-    if slide == "Введение":
-        st.title("Введение в проект")
-        st.write("""
-            Цель проекта - прогнозирование спроса на товары в магазинах на основе исторических данных.
-            Это помогает оптимизировать управление запасами и сократить издержки.
+        Предсказать будущий спрос на товары в рамках логистической системы компании, 
+        чтобы оптимизировать запасы и минимизировать расходы. 
+        Прогнозирование спроса помогает компаниям быть готовыми к изменениям на рынке и улучшать процессы поставки.
 
-            Основные этапы проекта:
-            1. Сбор и подготовка данных.
-            2. Проведение разведочного анализа данных (EDA).
-            3. Обработка признаков и создание модели.
-            4. Прогнозирование и анализ результатов.
-        """)
-        st.image("path_to_your_intro_image.png")  # Можно добавить изображение, если есть
+        ### Методология:
 
-    elif slide == "Исследование данных":
-        st.title("Разведочный анализ данных (EDA)")
-        st.write("На данном этапе мы проверяем данные на наличие пропусков, аномалий, исследуем закономерности.")
+        В рамках данного проекта используется метод машинного обучения, 
+        а именно алгоритм Random Forest Regressor. 
+        Я выбрал эту модель, 
+        потому что она хорошо справляется с задачами регрессии и справляется с нелинейными зависимостями в данных.
 
-        # Пример демонстрации DataFrame (заглушка для данных)
-        data = pd.DataFrame({
-            'store': [1, 2, 3],
-            'item': [1, 2, 3],
-            'sales': [20, 30, 40],
-            'month': [1, 2, 3],
-            'day_of_week': [0, 1, 2],
-            'year': [2013, 2014, 2015]
-        })
-        st.write("Пример данных:")
-        st.dataframe(data)
+        ### Основные этапы проекта:
+        1. Сбор и подготовка данных.
+        2. Проведение разведочного анализа данных (EDA).
+        3. Обработка признаков и создание модели.
+        4. Прогнозирование и анализ результатов.
+    """)
 
-        # Пример визуализации
-        st.write("График распределения продаж:")
-        fig, ax = plt.subplots()
-        sns.barplot(x='store', y='sales', data=data, ax=ax)
-        ax.set_title("Распределение продаж по магазинам")
-        st.pyplot(fig)
+    # Load and display data
+    data = pd.read_csv('data/Store Demand Forecasting Train Data.csv')
+    data = add_date_features(data)
+    st.write("Пример данных:")
+    st.dataframe(data)
 
-    elif slide == "Обработка признаков":
-        st.title("Обработка признаков")
-        st.write("""
-            Для улучшения качества модели выполняется обработка признаков:
-            - Создание новых признаков (например, сезонные факторы).
-            - Удаление нерелевантных данных.
-            - Кодирование категориальных признаков.
-        """)
-        st.image("path_to_feature_processing_image.png")  # Пример изображения или визуализации
+    # EDA Section
+    st.title("Разведочный анализ данных (EDA)")
+    st.write("На данном этапе мы проверяем данные на наличие пропусков, аномалий, исследуем закономерности.")
 
-    elif slide == "Модель и результаты":
-        st.title("Создание модели и результаты")
-        st.write("""
+    st.write("### Основные статистики")
+    st.write(data.describe())
+
+    st.write("### Распределение целевой переменной")
+    fig, ax = plt.subplots()
+    sns.histplot(data['sales'], kde=True, ax=ax)
+    ax.set_title('Распределение продаж')
+    ax.set_xlabel('Продажи')
+    ax.set_ylabel('Частота')
+    st.pyplot(fig)
+
+    st.write("### Корреляции")
+    corr_matrix = data.corr()
+    fig, ax = plt.subplots()
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', ax=ax, fmt=".2f")
+    st.pyplot(fig)
+
+    # Monthly Demand Visualization
+    st.write("### Спрос за месяца")
+    monthly_demand = data.groupby('month')['sales'].sum()
+    fig, ax = plt.subplots(figsize=(10, 6))
+    monthly_demand.plot(kind='bar', ax=ax, title='Спрос за месяца', color='skyblue')
+    ax.set_xlabel('Месяц')
+    ax.set_ylabel('Спрос')
+    st.pyplot(fig)
+
+    # Weekly Demand Visualization
+    st.write("### Средний спрос по дням недели")
+    weekly_demand = data.groupby('day_of_week')['sales'].mean()
+    fig, ax = plt.subplots(figsize=(10, 6))
+    weekly_demand.plot(kind='bar', ax=ax, title='Средний спрос по дням недели', color='skyblue')
+    ax.set_xlabel('День недели')
+    ax.set_ylabel('Средний спрос')
+    ax.set_xticklabels(['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'])
+    st.pyplot(fig)
+
+    # Demand Distribution by Store
+    st.write("### График распределения спроса:")
+    fig, ax = plt.subplots()
+    sns.barplot(x='store', y='sales', data=data, ax=ax, color='skyblue')
+    ax.set_title("Распределение спроса по магазинам")
+    ax.set_xlabel('Магазин')
+    ax.set_ylabel('Спрос')
+    st.pyplot(fig)
+
+    st.title("Обработка признаков")
+    st.write("""            
+            1.	Обработка данных:
+            На этом этапе я очистил и преобразовал данные. 
+            Были удалены пропущенные значения, а также проведена нормализация и стандартизация числовых признаков, 
+            чтобы улучшить работу модели.
+
+            2.	Создание новых признаков:
+            Важным шагом стало создание дополнительных признаков (feature engineering).
+            Я использовал различные метки времени, такие как день недели, месяц, неделя года,
+            чтобы учесть сезонность и цикличность спроса.
+    """)
+
+    st.title("Создание модели и результаты")
+    st.write("""
+            3.	Обучение и проверка модели:
+            Модель была обучена на данных, и для оценки ее качества использовались метрики, 
+            такие как Mean Absolute Error (MAE). 
+            Я протестировал несколько моделей, чтобы выбрать оптимальную.
             Для прогнозирования использовалась модель **Random Forest Regressor**.
-            Мы разделили данные на обучающую и тестовую выборки для проверки качества модели.
-        """)
-        model = load_model()
-        if model is not None:
-            st.success("Модель успешно загружена.")
-            st.write("Пример предсказания на основе данных пользователя:")
+            Я разделил данные на обучающую и тестовую выборки по временному признаку чтобы избежать утечки данных и 
+            для проверки качества модели.
+    """)
 
-            # Заглушка ввода данных (для демонстрации)
-            data = pd.DataFrame({
-                'store': [1],
-                'item': [1],
-                'month': [1],
-                'day_of_week': [0],
-                'year': [2013]
+    # Load Model and Predict
+    model = load_model()
+    if model is not None:
+        st.success("Модель успешно загружена.")
+        st.write("4. Пример предсказания на основе данных пользователя:")
+
+        # User Input for Predictions
+        store = st.slider("Магазин (Store ID)", min_value=1, max_value=10, value=1, step=1)
+        item = st.slider("Товар (Item ID)", min_value=1, max_value=50, value=1, step=1)
+        print('I am here 1')
+        min_date = datetime.date(2013, 1, 1)
+        print('I am here 2')
+        max_date = datetime.date(2025, 12, 31)
+        print('I am here 3')
+        selected_date = st.date_input("Дата: (date)", min_value=min_date, max_value=max_date)
+        f_date = selected_date.strftime('%Y-%m-%d %H:%M:%S')
+        print('I am here 4')
+
+        if st.button('Прогнозировать'):
+            data_custom = pd.DataFrame({
+                'item': [item],
+                'store': [store],
+                'month': [int(selected_date.strftime('%m'))],
+                'day_of_week': [int(selected_date.strftime('%u')) - 1],
+                'year': [int(selected_date.strftime('%Y'))],
+                'day': [int(selected_date.strftime('%d'))],
+                'week_of_year': [int(selected_date.strftime('%U')) + 1]
             })
-            prediction = model.predict(data)
+            st.dataframe(data_custom)
+            prediction = model.predict(data_custom)
             st.write(f"Прогнозируемое количество товаров: **{prediction[0]:.2f}**")
-
+            # Visualization of Predictions
             st.title("Визуализация прогнозов")
-            st.write("Результаты прогнозов отображаются с помощью графиков, что позволяет лучше понять динамику спроса.")
-
-            # Пример визуализации прогноза
+            selected_rows = data[(data['month'] == int(selected_date.strftime('%m')))
+                                 & (data['store'] == store) & (data['item'] == item)
+                                 & (data['day'] == int(selected_date.strftime('%d')))
+                                 & (data['year'] == int(selected_date.strftime('%Y')))]
+            st.dataframe(selected_rows)
             fig, ax = plt.subplots()
             ax.bar(["Прогноз"], [prediction[0]], color="skyblue")
+            ax.bar(['Действительность'], selected_rows['sales'], color="red")
             ax.set_ylabel('Количество товаров')
             ax.set_title("Прогноз спроса")
             st.pyplot(fig)
 
-    elif slide == "Заключение":
-        st.title("Заключение")
-        st.write("""
-            В этом проекте мы показали:
-            - Использование данных для предсказания спроса.
-            - Применение методов машинного обучения для улучшения точности прогноза.
-            - Потенциальные улучшения для дальнейшего исследования: добавление новых признаков, использование других моделей.
-        """)
-        st.write("Спасибо за внимание!")
-        st.image("path_to_thank_you_image.png")  # Заключительное изображение
+    st.title("Заключение")
+    st.write("""
+        5.	Модульность и воспроизводимость:
+        Для удобства и воспроизводимости была организована структура кода с использованием Jupyter Notebooks 
+        и интеграцией с Docker. Это позволяет легко запускать и повторять эксперименты в разных средах
+
+        Проект по прогнозированию спроса на товары помогает компаниям улучшить управление запасами 
+        и уменьшить издержки, эффективно реагируя на изменения рыночного спроса.
+
+        В этом проекте я показал:
+        - Использование данных для предсказания спроса.
+        - Применение методов машинного обучения для улучшения точности прогноза.
+        - Потенциальные улучшения для дальнейшего исследования: добавление новых признаков, 
+        использование других моделей.
+""")
+    st.write("Спасибо за внимание!")
 
 
 if __name__ == "__main__":
