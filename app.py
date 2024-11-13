@@ -23,17 +23,6 @@ import seaborn as sns
 from src.preprocessing import add_date_features
 from src.model_building import data_processing
 
-# Constants for mapping days of the week to integers
-DAY_OF_WEEK = {
-    'Monday': 0,
-    'Tuesday': 1,
-    'Wednesday': 2,
-    'Thursday': 3,
-    'Friday': 4,
-    'Saturday': 5,
-    'Sunday': 6
-}
-
 
 def load_model():
     """
