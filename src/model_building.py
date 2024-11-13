@@ -7,14 +7,14 @@ evaluates it, and visualizes predictions for demand forecasting.
 Dependencies:
     - load_data (from src.data_loading)
     - add_date_features (from src.preprocessing)
-    - plot_time_series (from src.eda)
+    - initial_analysis (from src.eda)
     - split_data, train_model, evaluate_model, save_model (from src.train_model)
     - plot_predictions (from src.evaluate)
 """
 
 from src.data_loading import load_data
 from src.preprocessing import add_date_features
-from src.eda import plot_time_series
+from src.eda import initial_analysis
 from src.train_model import split_data, train_model, evaluate_model, save_model
 from src.evaluate import plot_predictions
 
@@ -42,8 +42,8 @@ def data_processing(data_path='data/Store Demand Forecasting Train Data.csv'):
     # Add date-related features
     data = add_date_features(data, date_column='date')
 
-    # Plot time series data for exploratory analysis
-    plot_time_series(data, date_column='date', value_column='sales')
+    # Plot the distribution of 'sales' column using a histogram.
+    # initial_analysis(data)
 
     # Define features and target variable
     features = ['item', 'store', 'month', 'day_of_week', 'year', 'day', 'week_of_year']
@@ -57,14 +57,15 @@ def data_processing(data_path='data/Store Demand Forecasting Train Data.csv'):
 
     # Save the trained model to a file
     save_model(model, '../model.pkl')
+    print('Model created and saved')
 
     # Evaluate the model using the testing data and print the metrics
-    metrics = evaluate_model(model, X_test, y_test)
-    print(f'Model Evaluation Metrics: {metrics}')
+    # metrics = evaluate_model(model, X_test, y_test)
+    # print(f'Model Evaluation Metrics: {metrics}')
 
     # Predict on the test set and visualize the predictions
-    predictions = model.predict(X_test)
-    plot_predictions(test_data, y_test, predictions)
+    # predictions = model.predict(X_test)
+    # plot_predictions(test_data, y_test, predictions)
 
 
 if __name__ == '__main__':

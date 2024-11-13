@@ -10,15 +10,18 @@ Dependencies:
     - matplotlib
     - seaborn
     - pickle
+    - os
 """
 
 import datetime
+import os
 import pickle
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from src.preprocessing import add_date_features
+from src.model_building import data_processing
 
 # Constants for mapping days of the week to integers
 DAY_OF_WEEK = {
@@ -37,14 +40,21 @@ def load_model():
     Loads the pre-trained model from the specified pickle file.
 
     Returns:
-        model: The loaded model object or None if the model file is not found.
+        model: The loaded model object or None if the model creation fails.
     """
-    try:
-        with open('src/model.pkl', 'rb') as file:
-            model = pickle.load(file)
-        return model
-    except FileNotFoundError:
-        st.error("Model not found. Retry or create the model again.")
+    model_path = 'model.pkl'
+
+    if os.path.exists(model_path):
+        with open(model_path, 'rb') as file:
+            return pickle.load(file)
+
+    st.error("Model not found. Creating model...")
+    success = data_processing()
+    if success and os.path.exists(model_path):
+        with open(model_path, 'rb') as file:
+            return pickle.load(file)
+    else:
+        st.error("Model creation failed. Please check the data processing pipeline.")
         return None
 
 
@@ -166,14 +176,9 @@ def main():
         # User Input for Predictions
         store = st.slider("Магазин (Store ID)", min_value=1, max_value=10, value=1, step=1)
         item = st.slider("Товар (Item ID)", min_value=1, max_value=50, value=1, step=1)
-        print('I am here 1')
         min_date = datetime.date(2013, 1, 1)
-        print('I am here 2')
         max_date = datetime.date(2025, 12, 31)
-        print('I am here 3')
         selected_date = st.date_input("Дата: (date)", min_value=min_date, max_value=max_date)
-        f_date = selected_date.strftime('%Y-%m-%d %H:%M:%S')
-        print('I am here 4')
 
         if st.button('Прогнозировать'):
             data_custom = pd.DataFrame({
